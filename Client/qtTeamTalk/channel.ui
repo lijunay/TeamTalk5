@@ -190,6 +190,9 @@
             </item>
             <item>
              <widget class="QToolButton" name="singletxButton">
+              <property name="accessibleName">
+               <string>Setup</string>
+              </property>
               <property name="text">
                <string>...</string>
               </property>
