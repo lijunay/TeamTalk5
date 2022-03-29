@@ -31,6 +31,7 @@
 #include <QQueue>
 #include <QSystemTrayIcon>
 #include <QNetworkAccessManager>
+#include <QSortFilterProxyModel>
 
 #include "common.h"
 #include "utilsound.h"
@@ -128,6 +129,7 @@ protected:
 private:
     Ui::MainWindow ui;
     class FilesModel* m_filesmodel;
+    QSortFilterProxyModel* m_proxyFilesModel;
     QSystemTrayIcon* m_sysicon;
     QMenu* m_sysmenu;
     QLabel* m_pttlabel;
@@ -220,10 +222,10 @@ private:
     // init selected sound devices
     void initSound();
 
-    //current command reply processing
-    void commandProcessing(int cmdid, bool complete);
     //command replies
-    void cmdLoggedIn(int myuserid);
+    void cmdCompleteLoggedIn(int myuserid);
+    void cmdCompleteListServers(CommandComplete complete);
+    void cmdCompleteListUserAccounts();
 
     QString getTitle();
     void updateWindowTitle();
@@ -286,11 +288,13 @@ private:
     void slotClientPreferences(bool checked=false);
     void slotClientSoundDevices();
     void slotClientAudioEffect();
+    void slotClientRecordConversations(bool checked=false);
     void slotClientExit(bool checked=false);
 
     void slotMeChangeNickname(bool checked=false);
     void slotMeChangeStatus(bool checked=false);
     void slotMeEnablePushToTalk(bool checked=false);
+    void slotMeHearMyself(bool checked=false);
     void slotMeEnableVoiceActivation(bool checked=false, SoundEvent on = SOUNDEVENT_VOICEACTON, SoundEvent off = SOUNDEVENT_VOICEACTOFF);
     void slotMeEnableVideoTransmission(bool checked=false);
     void slotMeEnableDesktopSharing(bool checked=false);
@@ -334,7 +338,6 @@ private:
     void slotUsersAdvancedDesktopAllowed(bool checked=false);
     void slotUsersAdvancedMediaFileAllowed(bool checked=false);
     void slotUsersMuteVoiceAll(bool checked=false);
-    void slotUsersStoreAudioToDisk(bool checked=false);
 
     void slotChannelsCreateChannel(bool checked=false);
     void slotChannelsUpdateChannel(bool checked=false);
@@ -430,6 +433,31 @@ private:
     void startTTS();
     void slotTextChanged();
     void slotEnableVoiceActivation(bool checked=false);
+
+    void clienteventConSuccess();
+    void clienteventConFailed();
+    void clienteventConLost();
+    void clienteventMyselfKicked(const TTMessage& msg);
+    void clienteventCmdProcessing(int cmdid, bool complete);
+    void clienteventCmdChannelUpdate(const Channel& channel);
+    void clienteventCmdUserLoggedIn(const User& user);
+    void clienteventCmdUserLoggedOut(const User& user);
+    void clienteventCmdUserJoined(const User& user);
+    void clienteventCmdUserLeft(int prevchannelid, const User& user);
+    void clienteventCmdUserUpdate(const User& user);
+    void clienteventCmdFileNew(const RemoteFile& file);
+    void clienteventCmdFileRemove(const RemoteFile& file);
+    void clienteventFileTransfer(const FileTransfer& filetransfer);
+    void clienteventInternalError(const ClientErrorMsg& clienterrormsg);
+    void clienteventUserStateChange(const User& user);
+    void clienteventVoiceActivation(bool active);
+    void clienteventStreamMediaFile(const MediaFileInfo& mediafileinfo);
+    void clienteventUserVideoCapture(int source, int streamid);
+    void clienteventUserMediaFileVideo(int source, int streamid);
+    void clienteventUserDesktopWindow(int source, int streamid);
+    void clienteventDesktopWindowTransfer(int source, int bytesremain);
+    void clienteventUserRecordMediaFile(int source, const MediaFileInfo& mediafileinfo);
+    void clienteventUserAudioBlock(int source, StreamTypes streamtypes);
 
 signals:
     /* Begin - CLIENTEVENT_* based events */

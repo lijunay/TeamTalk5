@@ -23,12 +23,22 @@
 
 package dk.bearware;
 
-public class TextMessage
-{
+public class TextMessage {
     public int /* TextMsgType */ nMsgType;
     public int nFromUserID;
     public String szFromUsername;
     public int nToUserID;
     public int nChannelID;
     public String szMessage;
+    public boolean bMore;
+    public TextMessage() {}
+    public TextMessage(TextMessage msg) {
+        this.nMsgType = msg.nMsgType;
+        this.nFromUserID = msg.nFromUserID;
+        this.szFromUsername = msg.szFromUsername;
+        this.nToUserID = msg.nToUserID;
+        this.nChannelID = msg.nChannelID;
+        this.szMessage = msg.szMessage;
+        this.bMore = msg.bMore;
+    }
 }

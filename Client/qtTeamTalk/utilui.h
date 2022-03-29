@@ -31,6 +31,7 @@
 #include <QLayout>
 #include <QComboBox>
 #include <QDialog>
+#include <QAbstractItemView>
 
 enum DoubleClickChannelAction
 {
@@ -120,5 +121,23 @@ void setMacResizeMargins(QDialog* dlg, QLayout* layout);
 
 void setCurrentItemData(QComboBox* cbox, const QVariant& itemdata);
 QVariant getCurrentItemData(QComboBox* cbox, const QVariant& not_found = QVariant());
+
+QString getBearWareWebLogin(QWidget* parent);
+
+textmessages_t sendTextMessage(const TextMessage& msg, const QString& content);
+
+class RestoreIndex
+{
+    Q_DISABLE_COPY(RestoreIndex)
+    int m_row, m_column;
+    QModelIndex m_parent;
+    QAbstractItemView* m_view;
+public:
+    RestoreIndex(QAbstractItemView* view);
+    ~RestoreIndex();
+};
+
+void saveWindowPosition(const QString& setting, QWidget* widget);
+bool restoreWindowPosition(const QString& setting, QWidget* widget);
 
 #endif

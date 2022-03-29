@@ -740,3 +740,30 @@
 
 /* Sound Input */
 "Preferred" = "Preferred";
+
+/* server entry */
+"Country" = "Country";
+
+/* serverlist */
+"Local server" = "Local server";
+
+/* server entry */
+"Message of the Day" = "Message of the Day";
+
+/* serverlist */
+"Official server" = "Official server";
+
+/* server entry */
+"Users Online" = "Users Online";
+
+/* serverlist */
+"Users: %d, Country: %@" = "Users: %1$d, Country: %2$@";
+
+/* preferences */
+"Show in Server List" = "Show in Server List";
+
+/* serverlist */
+"Unofficial server" = "Unofficial server";
+
+/* server entry */
+"Server Status" = "Server Status";

@@ -157,6 +157,9 @@
    tts event */
 "Connection lost" = "Verbinding verbroken";
 
+/* server entry */
+"Country" = "Country";
+
 /* View Title */
 "Create Channel" = "Kanaal Aanmaken";
 
@@ -273,6 +276,9 @@
 /* preferences */
 "Limit length of names in channel list to %d characters" = "Namen in kanalenlijst beperken tot %d tekens";
 
+/* serverlist */
+"Local server" = "Local server";
+
 /* text message type */
 "Log message" = "Log message";
 
@@ -301,6 +307,9 @@
 
 /* Dialog */
 "Message limit exceeded by %d characters" = "Message limit exceeded by %d characters";
+
+/* server entry */
+"Message of the Day" = "Message of the Day";
 
 /* preferences */
 "Microphone Gain" = "Microfoonniveau";
@@ -364,6 +373,9 @@
 
 /* default nickname */
 "Noname" = "Geennaam";
+
+/* serverlist */
+"Official server" = "Official server";
 
 /* Dialog
    Dialog message
@@ -514,6 +526,12 @@
 /* server entry */
 "Server List Entry" = "Serverlijstitem";
 
+/* server entry */
+"Server Status" = "Server Status";
+
+/* preferences */
+"Show in Server List" = "Show in Server List";
+
 /* preferences */
 "Show male or female icon" = "Show male or female icon";
 
@@ -619,6 +637,9 @@
 /* server entry */
 "UDP Port" = "UDP-poort";
 
+/* serverlist */
+"Unofficial server" = "Unofficial server";
+
 /* preferences */
 "Use echo cancellation and automatic gain control" = "Use echo cancellation and automatic gain control";
 
@@ -665,6 +686,12 @@
 
 /* Web Login Controller */
 "Username or password incorrect" = "Username or password incorrect";
+
+/* server entry */
+"Users Online" = "Users Online";
+
+/* serverlist */
+"Users: %d, Country: %@" = "Users: %1$d, Country: %2$@";
 
 /* codec detail */
 "Variable Bitrate" = "Variable Bitrate";

@@ -417,10 +417,9 @@ class MainTabBarController : UITabBarController, UIAlertViewDelegate, TeamTalkEv
 
         case CLIENTEVENT_CMD_ERROR :
             if m.nSource == cmdid {
-                var errmsg = getClientErrorMsg(&m).pointee
-                let s = String(cString: getClientErrorMsgString(ERRMESSAGE, &errmsg))
+                let errmsg = getClientErrorMsg(m.clienterrormsg, strprop: ERRMESSAGE)
                 if #available(iOS 8.0, *) {
-                    let alert = UIAlertController(title: NSLocalizedString("Error", comment: "message dialog"), message: s, preferredStyle: UIAlertController.Style.alert)
+                    let alert = UIAlertController(title: NSLocalizedString("Error", comment: "message dialog"), message: errmsg, preferredStyle: UIAlertController.Style.alert)
                     alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "message dialog"), style: UIAlertAction.Style.default, handler: nil))
                     self.present(alert, animated: true, completion: nil)
                 } else {
@@ -560,7 +559,7 @@ class MainTabBarController : UITabBarController, UIAlertViewDelegate, TeamTalkEv
                                     $0.udpport == server.udpport &&
                                     $0.username == server.username})
 
-        if found.count == 0 && server.publicserver == false {
+        if found.count == 0 && server.servertype == .LOCAL {
             let alertView = UIAlertView(title: NSLocalizedString("Save server to server list?", comment: "Dialog message"),
                                         message: NSLocalizedString("Save Server", comment: "Dialog message"), delegate: self,
                                         cancelButtonTitle: NSLocalizedString("No", comment: "Dialog message"),

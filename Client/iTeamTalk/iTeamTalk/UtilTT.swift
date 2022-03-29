@@ -8,7 +8,7 @@
 
 import Foundation
 
-protocol TeamTalkEvent : class {
+protocol TeamTalkEvent : AnyObject {
     func handleTTMessage(_ m: TTMessage)
 }
 
@@ -72,6 +72,10 @@ func getChannel(_ chan: Channel, strprop : CExt) -> String {
 
 func getUser(_ user: User, strprop : UExt) -> String {
     return String(cString: withUnsafePointer(to: user) { getUserString(strprop, $0) })
+}
+
+func getClientErrorMsg(_ clienterr: ClientErrorMsg, strprop: CEExt) -> String {
+    return String(cString: withUnsafePointer(to: clienterr) { getClientErrorMsgString(strprop, $0) })
 }
 
 let TRUE : TTBOOL = 1

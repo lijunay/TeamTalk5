@@ -23,7 +23,17 @@
 
 #include "utilui.h"
 #include "settings.h"
+#include "bearwarelogindlg.h"
 
+#if QT_VERSION < QT_VERSION_CHECK(6,0,0)
+#include <QDesktopWidget>
+#include <QApplication>
+#else
+#include <QScreen>
+#include <QGuiApplication>
+#endif
+
+extern TTInstance* ttInst;
 extern QSettings* ttSettings;
 
 void setVideoTextBox(const QRect& rect, const QColor& bgcolor,
@@ -97,4 +107,133 @@ QVariant getCurrentItemData(QComboBox* cbox, const QVariant& not_found/* = QVari
     if(cbox->currentIndex()>=0)
         return cbox->itemData(cbox->currentIndex());
     return not_found;
+}
+
+QString getBearWareWebLogin(QWidget* parent)
+{
+    QString username = ttSettings->value(SETTINGS_GENERAL_BEARWARE_USERNAME).toString();
+    if (username.isEmpty())
+    {
+        BearWareLoginDlg dlg(parent);
+        if (dlg.exec())
+        {
+            username = ttSettings->value(SETTINGS_GENERAL_BEARWARE_USERNAME).toString();
+        }
+    }
+    return username;
+}
+
+textmessages_t buildTextMessages(const TextMessage& msg, const QString& content)
+{
+    Q_ASSERT(msg.szMessage[0] == '\0');
+
+    textmessages_t result;
+    MyTextMessage newmsg(msg);
+    QString remain = content;
+
+    if (remain.toUtf8().size() <= TT_STRLEN - 1)
+    {
+        COPY_TTSTR(newmsg.szMessage, remain);
+        newmsg.bMore = FALSE;
+        result.append(newmsg);
+        return result;
+    }
+
+    newmsg.bMore = TRUE;
+
+    int curlen = remain.size();
+    while (remain.left(curlen).toUtf8().size() > TT_STRLEN - 1)
+        curlen /= 2;
+
+    int half = TT_STRLEN / 2;
+    while (half > 0)
+    {
+        auto utf8str = remain.left(curlen + half).toUtf8();
+        if (utf8str.size() <= TT_STRLEN - 1)
+            curlen += half;
+        if (utf8str.size() == TT_STRLEN - 1)
+            break;
+        half /= 2;
+    }
+
+    COPY_TTSTR(newmsg.szMessage, remain.left(curlen));
+    result.append(newmsg);
+    newmsg.szMessage[0] = {'\0'};
+    result.append(buildTextMessages(newmsg, remain.mid(curlen)));
+    return result;
+}
+
+textmessages_t sendTextMessage(const TextMessage& msg, const QString& content)
+{
+    bool sent = true;
+    auto messages = buildTextMessages(msg, content);
+    for (const auto& m : messages)
+    {
+        sent = sent && TT_DoTextMessage(ttInst, &m) > 0;
+    }
+    return sent ? messages : textmessages_t();
+}
+
+RestoreIndex::RestoreIndex(QAbstractItemView* view)
+    : m_view(view)
+{
+    m_parent = view->currentIndex().parent();
+    m_row = view->currentIndex().row();
+    m_column = view->currentIndex().column();
+}
+
+RestoreIndex::~RestoreIndex()
+{
+    if (m_view->model()->rowCount() == 0 || m_view->model()->columnCount() == 0)
+        return;
+
+    m_row = std::min(m_row, m_view->model()->rowCount() - 1);
+    m_column = std::min(m_column, m_view->model()->columnCount() - 1);
+    m_view->setCurrentIndex(m_view->model()->index(m_row, m_column, m_parent));
+}
+
+void saveWindowPosition(const QString& setting, QWidget* widget)
+{
+    if (widget->windowState() == Qt::WindowNoState)
+    {
+        QRect r = widget->geometry();
+        QVariantList windowpos;
+        windowpos.push_back(r.x());
+        windowpos.push_back(r.y());
+        windowpos.push_back(r.width());
+        windowpos.push_back(r.height());
+        ttSettings->setValue(setting, windowpos);
+    }
+}
+
+bool restoreWindowPosition(const QString& setting, QWidget* widget)
+{
+    bool success = false;
+    QVariantList windowpos = ttSettings->value(setting).toList();
+    if (windowpos.size() == 4)
+    {
+        int x = windowpos[0].toInt();
+        int y = windowpos[1].toInt();
+        int w = windowpos[2].toInt();
+        int h = windowpos[3].toInt();
+
+#if QT_VERSION < QT_VERSION_CHECK(6,0,0)
+        int desktopW = QApplication::desktop()->width();
+        int desktopH = QApplication::desktop()->height();
+        if(x <= desktopW && y <= desktopH)
+        {
+            widget->setGeometry(x, y, w, h);
+            success = true;
+        }
+#else
+        // check that we are within bounds
+        QScreen* screen = QGuiApplication::screenAt(QPoint(x, y));
+        if (screen)
+        {
+            widget->setGeometry(x, y, w, h);
+            success = true;
+        }
+#endif
+    }
+    return success;
 }

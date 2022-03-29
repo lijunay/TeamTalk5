@@ -24,22 +24,23 @@
 #ifndef FILESVIEW_H
 #define FILESVIEW_H
 
+#include "mytreeview.h"
+
 #include <QTreeView>
 #include <QList>
 
-class FilesView : public QTreeView
+class FilesView : public MyTreeView
 {
     Q_OBJECT
 public:
     FilesView(QWidget* parent);
 
-    QList<int> selectedFiles(QStringList* fileNames = nullptr);
+    QStringList selectedFiles();
 
 protected:
-    void dragEnterEvent(QDragEnterEvent *event);
-    void dragMoveEvent(QDragMoveEvent* event);
-    void dropEvent(QDropEvent* event);
-    void mousePressEvent(QMouseEvent* event);
+    void dragEnterEvent(QDragEnterEvent *event) override;
+    void dragMoveEvent(QDragMoveEvent* event) override;
+    void dropEvent(QDropEvent* event) override;
 
 signals:
     void filesSelected(bool);

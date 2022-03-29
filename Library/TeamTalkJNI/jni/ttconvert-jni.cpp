@@ -1123,6 +1123,7 @@ void setServerProperties(JNIEnv* env, ServerProperties& srvprop, jobject lpServe
     jfieldID fid_srvver = env->GetFieldID(cls_srv, "szServerVersion", "Ljava/lang/String;");
     jfieldID fid_srvprot = env->GetFieldID(cls_srv, "szServerProtocolVersion", "Ljava/lang/String;");
     jfieldID fid_access = env->GetFieldID(cls_srv, "szAccessToken", "Ljava/lang/String;");
+    jfieldID fid_logevents = env->GetFieldID(cls_srv, "uServerLogEvents", "I");
 
     assert(fid_name);
     assert(fid_motd);
@@ -1143,6 +1144,7 @@ void setServerProperties(JNIEnv* env, ServerProperties& srvprop, jobject lpServe
     assert(fid_srvver);
     assert(fid_srvprot);
     assert(fid_access);
+    assert(fid_logevents);
 
     if(conv == N2J)
     {
@@ -1165,6 +1167,7 @@ void setServerProperties(JNIEnv* env, ServerProperties& srvprop, jobject lpServe
         env->SetObjectField(lpServerProperties, fid_srvver, NEW_JSTRING(env, srvprop.szServerVersion));
         env->SetObjectField(lpServerProperties, fid_srvprot, NEW_JSTRING(env, srvprop.szServerProtocolVersion));
         env->SetObjectField(lpServerProperties, fid_access, NEW_JSTRING(env, srvprop.szAccessToken));
+        env->SetIntField(lpServerProperties, fid_logevents, srvprop.uServerLogEvents);
     }
     else
     {
@@ -1188,6 +1191,7 @@ void setServerProperties(JNIEnv* env, ServerProperties& srvprop, jobject lpServe
         TT_STRCPY(srvprop.szServerVersion, ttstr(env, (jstring)env->GetObjectField(lpServerProperties, fid_srvver)));
         TT_STRCPY(srvprop.szServerProtocolVersion, ttstr(env, (jstring)env->GetObjectField(lpServerProperties, fid_srvprot)));
         TT_STRCPY(srvprop.szAccessToken, ttstr(env, (jstring)env->GetObjectField(lpServerProperties, fid_access)));
+        srvprop.uServerLogEvents = env->GetIntField(lpServerProperties, fid_logevents);
     }
 }
 
@@ -1328,6 +1332,8 @@ void setTextMessage(JNIEnv* env, TextMessage& msg, jobject lpTextMessage, JConve
     jfieldID fid_toid = env->GetFieldID(cls_txtmsg, "nToUserID", "I");
     jfieldID fid_chanid = env->GetFieldID(cls_txtmsg, "nChannelID", "I");
     jfieldID fid_msg = env->GetFieldID(cls_txtmsg, "szMessage", "Ljava/lang/String;");
+    jfieldID fid_more = env->GetFieldID(cls_txtmsg, "bMore", "Z");
+
 
     assert(fid_type);
     assert(fid_fromid);
@@ -1335,6 +1341,7 @@ void setTextMessage(JNIEnv* env, TextMessage& msg, jobject lpTextMessage, JConve
     assert(fid_toid);
     assert(fid_chanid);
     assert(fid_msg);
+    assert(fid_more);
 
     if(conv == N2J)
     {
@@ -1344,6 +1351,7 @@ void setTextMessage(JNIEnv* env, TextMessage& msg, jobject lpTextMessage, JConve
         env->SetIntField(lpTextMessage, fid_toid, msg.nToUserID);
         env->SetIntField(lpTextMessage, fid_chanid, msg.nChannelID);
         env->SetObjectField(lpTextMessage, fid_msg, NEW_JSTRING(env, msg.szMessage));
+        env->SetBooleanField(lpTextMessage, fid_more, msg.bMore);
     }
     else
     {
@@ -1354,6 +1362,7 @@ void setTextMessage(JNIEnv* env, TextMessage& msg, jobject lpTextMessage, JConve
         msg.nToUserID = env->GetIntField(lpTextMessage, fid_toid);
         msg.nChannelID = env->GetIntField(lpTextMessage, fid_chanid);
         TT_STRCPY(msg.szMessage, ttstr(env, (jstring)env->GetObjectField(lpTextMessage, fid_msg)));
+        msg.bMore = env->GetBooleanField(lpTextMessage, fid_more);
     }
 }
 

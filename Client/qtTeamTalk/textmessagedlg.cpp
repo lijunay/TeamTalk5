@@ -26,6 +26,7 @@
 #include "settings.h"
 #include "utilsound.h"
 #include "utiltts.h"
+#include "utilui.h"
 
 #include <QDebug>
 #include <QMessageBox>
@@ -63,6 +64,8 @@ void TextMessageDlg::init(const User& user)
 {
     ui.setupUi(this);
     setWindowIcon(QIcon(APPICON));
+    restoreGeometry(ttSettings->value(SETTINGS_DISPLAY_TEXTMSGWINDOWPOS).toByteArray());
+    ui.splitter->restoreState(ttSettings->value(SETTINGS_DISPLAY_TEXTMSGWINDOWPOS_SPLITTER).toByteArray());
     ui.newmsgTextEdit->setFocus();
 
     connect(ui.cancelButton, &QAbstractButton::clicked, this, &TextMessageDlg::slotCancel);
@@ -78,6 +81,9 @@ void TextMessageDlg::init(const User& user)
 
 TextMessageDlg::~TextMessageDlg()
 {
+    ttSettings->setValue(SETTINGS_DISPLAY_TEXTMSGWINDOWPOS, saveGeometry());
+    ttSettings->setValue(SETTINGS_DISPLAY_TEXTMSGWINDOWPOS_SPLITTER, ui.splitter->saveState());
+
     emit(closedTextMessage(m_userid));
 }
 
@@ -111,7 +117,7 @@ void TextMessageDlg::timerEvent(QTimerEvent *event)
         if(m_textchanged)
         {
             ServerProperties srvprop;
-            if(TT_GetServerProperties(ttInst, &srvprop))
+            if (TT_GetServerProperties(ttInst, &srvprop))
             {
                 MyTextMessage msg;
                 msg.nFromUserID = TT_GetMyUserID(ttInst);
@@ -119,9 +125,7 @@ void TextMessageDlg::timerEvent(QTimerEvent *event)
                 msg.nToUserID = m_userid;
                 QString cmd = makeCustomCommand(TT_INTCMD_TYPING_TEXT,
                                                 QString::number((int)!ui.newmsgTextEdit->toPlainText().isEmpty()));
-                COPY_TTSTR(msg.szMessage, cmd);
-                if(TT_DoTextMessage(ttInst, &msg)>0)
-                    emit(newMyselfTextMessage(msg));
+                sendTextMessage(msg, cmd);
             }
             m_textchanged = false;
         }
@@ -129,7 +133,7 @@ void TextMessageDlg::timerEvent(QTimerEvent *event)
 
     if(m_remote_typing_id == event->timerId())
     {
-        ui.newmsgLabel->setText(tr("New message"));
+        ui.newmsgGroupBox->setTitle(tr("New message"));
         killTimer(m_remote_typing_id);
         m_remote_typing_id = 0;
     }
@@ -155,23 +159,21 @@ void TextMessageDlg::slotSendTextMessage(const QString& txt_msg)
     msg.nChannelID = 0;
     msg.nMsgType = MSGTYPE_USER;
     msg.nToUserID = m_userid;
-    COPY_TTSTR(msg.szMessage, txt_msg);
 
-    if (txt_msg.toUtf8().size() < TT_STRLEN)
+    auto sentmessages = sendTextMessage(msg, txt_msg);
+    if (sentmessages.size() > 0)
     {
-        if(TT_DoTextMessage(ttInst, &msg)>0)
+        ui.newmsgTextEdit->setPlainText("");
+
+        for (auto& m : sentmessages)
         {
-            ui.newmsgTextEdit->setPlainText("");
-            newMsg(msg, true);
-            emit(newMyselfTextMessage(msg));
-            playSoundEvent(SOUNDEVENT_USERMSGSENT);
-            addTextToSpeechMessage(TTS_USER_TEXTMSG_PRIVATE_SEND, tr("Private message sent: %1").arg(msg.szMessage));
-            m_textchanged = false;
+            newMsg(m, true);
+            emit(newMyselfTextMessage(m));
         }
-    }
-    else
-    {
-        QMessageBox::information(this, tr("Character limit exceeded"), QString(tr("Your message has exceeded the limit by %1 characters. Please reduce it and try again.").arg(txt_msg.toUtf8().size() - TT_STRLEN + 1)));
+
+        playSoundEvent(SOUNDEVENT_USERMSGSENT);
+        addTextToSpeechMessage(TTS_USER_TEXTMSG_PRIVATE_SEND, tr("Private message sent: %1").arg(msg.szMessage));
+        m_textchanged = false;
     }
 }
 
@@ -188,7 +190,7 @@ void TextMessageDlg::newMsg(const MyTextMessage& msg, bool store)
     case MSGTYPE_USER :
     {
         QString line = ui.historyTextEdit->addTextMessage(msg);
-        ui.newmsgLabel->setText(tr("New message"));
+        ui.newmsgGroupBox->setTitle(tr("New message"));
 
         QString folder = ttSettings->value(SETTINGS_MEDIASTORAGE_USERLOGFOLDER).toString();
         if(store && folder.size())
@@ -210,7 +212,7 @@ void TextMessageDlg::newMsg(const MyTextMessage& msg, bool store)
         {
             if(cmd_msg[1] == "1")
             {
-                ui.newmsgLabel->setText(tr("New message - remote user typing."));
+                ui.newmsgGroupBox->setTitle(tr("New message - remote user typing."));
                 User remoteuser;
                 if (TT_GetUser(ttInst, m_userid, &remoteuser))
                 {
@@ -228,7 +230,7 @@ void TextMessageDlg::newMsg(const MyTextMessage& msg, bool store)
                 if(m_remote_typing_id)
                     killTimer(m_remote_typing_id);
                 m_remote_typing_id = 0;
-                ui.newmsgLabel->setText(tr("New message"));
+                ui.newmsgGroupBox->setTitle(tr("New message"));
             }
         }
         break;

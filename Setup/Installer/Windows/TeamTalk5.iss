@@ -11,7 +11,7 @@ AppUpdatesURL=http://www.bearware.dk
 DefaultDirName={pf}\TeamTalk5
 DefaultGroupName=TeamTalk 5
 AllowNoIcons=yes
-OutputBaseFilename=TeamTalk_v5.9.0.5072_Setup
+OutputBaseFilename=TeamTalk_v5.9.0.5079_Setup
 SetupIconFile=c:\tt5dist\TeamTalk5_x86\TeamTalk5\Client\qtTeamTalk\images\teamtalk.ico
 Compression=lzma/ultra64
 SolidCompression=yes
@@ -133,6 +133,7 @@ Source: "c:\tt5dist\TeamTalk5_x86\TeamTalk5\Client\qtTeamTalk\languages\French.q
 Source: "c:\tt5dist\TeamTalk5_x86\TeamTalk5\Client\qtTeamTalk\languages\German.qm"; DestDir: "{app}\languages"; Components: client; Flags: ignoreversion;
 Source: "c:\tt5dist\TeamTalk5_x86\TeamTalk5\Client\qtTeamTalk\languages\Hebrew.qm"; DestDir: "{app}\languages"; Components: client; Flags: ignoreversion;
 Source: "c:\tt5dist\TeamTalk5_x86\TeamTalk5\Client\qtTeamTalk\languages\Hungarian.qm"; DestDir: "{app}\languages"; Components: client; Flags: ignoreversion;
+Source: "c:\tt5dist\TeamTalk5_x86\TeamTalk5\Client\qtTeamTalk\languages\Indonesian.qm"; DestDir: "{app}\languages"; Components: client; Flags: ignoreversion;
 Source: "c:\tt5dist\TeamTalk5_x86\TeamTalk5\Client\qtTeamTalk\languages\Italian.qm"; DestDir: "{app}\languages"; Components: client; Flags: ignoreversion;
 Source: "c:\tt5dist\TeamTalk5_x86\TeamTalk5\Client\qtTeamTalk\languages\Polish.qm"; DestDir: "{app}\languages"; Components: client; Flags: ignoreversion;
 Source: "c:\tt5dist\TeamTalk5_x86\TeamTalk5\Client\qtTeamTalk\languages\Portuguese_BR.qm"; DestDir: "{app}\languages"; Components: client; Flags: ignoreversion;

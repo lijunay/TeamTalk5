@@ -292,7 +292,6 @@ public class Utils {
             if (nNode.getNodeType() == Node.ELEMENT_NODE) {
                 Element eElement = (Element) nNode;
                 ServerEntry entry = new ServerEntry();
-                entry.public_server = true;
                 entry.rememberLastChannel = false;
                 NodeList nHost = eElement.getElementsByTagName("name");
                 if(nHost.getLength()>0)
@@ -314,6 +313,21 @@ public class Utils {
                 nHost = eElement.getElementsByTagName("encrypted");
                 if(nHost.getLength()>0)
                     entry.encrypted = nHost.item(0).getTextContent().equalsIgnoreCase("true");
+                nHost = eElement.getElementsByTagName("listing");
+                if (nHost.getLength() > 0) {
+                    switch (nHost.item(0).getTextContent()) {
+                        case "official" :
+                            entry.servertype = ServerEntry.ServerType.OFFICIAL;
+                            break;
+                        case "public" :
+                            entry.servertype = ServerEntry.ServerType.PUBLIC;
+                            break;
+                        case "private" :
+                            entry.servertype = ServerEntry.ServerType.UNOFFICIAL;
+                            break;
+                    }
+                }
+
                 //process <auth>
                 NodeList nListAuth = eElement.getElementsByTagName("auth");
                 for(int j = 0;j<nListAuth.getLength();j++) {
@@ -340,6 +354,32 @@ public class Utils {
                         nJoin = eElement1.getElementsByTagName("password");
                         if(nJoin.getLength()>0)
                             entry.chanpasswd = nJoin.item(0).getTextContent();
+                    }
+                }
+
+                //process <stats>
+                NodeList nListStats = eElement.getElementsByTagName("stats");
+                for(int k=0;k<nListStats.getLength();k++) {
+                    nNode = nListStats.item(k);
+                    if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+                        Element eElement1 = (Element) nNode;
+                        NodeList nStats = eElement1.getElementsByTagName("motd");
+                        if (nStats.getLength() > 0) {
+                            entry.stats_motd = nStats.item(0).getTextContent();
+                        }
+                        nStats = eElement1.getElementsByTagName("country");
+                        if (nStats.getLength() > 0) {
+                            entry.stats_country = nStats.item(0).getTextContent();
+                        }
+                        nStats = eElement1.getElementsByTagName("user-count");
+                        if (nStats.getLength() > 0) {
+                            try {
+                                entry.stats_usercount = Integer.parseInt(nStats.item(0).getTextContent());
+                            }
+                            catch (NumberFormatException e) {
+
+                            }
+                         }
                     }
                 }
                 servers.add(entry);
