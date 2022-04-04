@@ -30,6 +30,7 @@
 
 #include <QUrl>
 #include <QMessageBox>
+#include <QInputDialog>
 #include <QFile>
 #include <QNetworkRequest>
 #include <QNetworkReply>
@@ -56,7 +57,7 @@ void processHostEntry(const QDomElement& hostElement, HostEntryEx& entry)
         if (tmp.text() == "public")
             entry.srvtype = SERVERTYPE_PUBLIC;
         if (tmp.text() == "private")
-            entry.srvtype = SERVERTYPE_PRIVATE;
+            entry.srvtype = SERVERTYPE_UNOFFICIAL;
     }
 }
 
@@ -135,8 +136,8 @@ QVariant ServerListModel::data(const QModelIndex & index, int role /*= Qt::Displ
         case SERVERTYPE_PUBLIC:
             srvtype = tr("Public server");
             break;
-        case SERVERTYPE_PRIVATE:
-            srvtype = tr("Private server");
+        case SERVERTYPE_UNOFFICIAL:
+            srvtype = tr("Unofficial server");
             break;
         }
         return QString(tr("%1, Name: %2, Users: %3, Country: %4, MOTD: %5").arg(srvtype).arg(srv.name).arg(srv.usercount).arg(srv.country).arg(srv.motd));
@@ -152,7 +153,7 @@ QVariant ServerListModel::data(const QModelIndex & index, int role /*= Qt::Displ
             return QColor(0x0,0x4A,0x7F);
         case SERVERTYPE_PUBLIC :
             return QColor(0x0C,0x52,0x28);
-        case SERVERTYPE_PRIVATE :
+        case SERVERTYPE_UNOFFICIAL :
             return QColor(0xFF,0x61,0xC);
         }
         break;
@@ -169,7 +170,7 @@ QVariant ServerListModel::data(const QModelIndex & index, int role /*= Qt::Displ
                 break;
             case SERVERTYPE_OFFICIAL :
             case SERVERTYPE_PUBLIC :
-            case SERVERTYPE_PRIVATE :
+            case SERVERTYPE_UNOFFICIAL :
                 category = getServerType(getServers()[index.row()]);
                 id = getServers()[index.row()].id; // sort by id (order from www-server)
                 break;
@@ -274,9 +275,11 @@ ServerListDlg::ServerListDlg(QWidget * parent/* = 0*/)
             this, &ServerListDlg::slotClearServerClicked);
     connect(ui.serverTreeView, &QAbstractItemView::doubleClicked,
             this, &ServerListDlg::slotDoubleClicked);
+    connect(ui.officialserverChkBox, &QAbstractButton::clicked,
+            this, &ServerListDlg::refreshServerList);
     connect(ui.publicserverChkBox, &QAbstractButton::clicked,
             this, &ServerListDlg::refreshServerList);
-    connect(ui.privateserverChkBox, &QAbstractButton::clicked,
+    connect(ui.unofficialserverChkBox, &QAbstractButton::clicked,
             this, &ServerListDlg::refreshServerList);
     connect(ui.genttButton, &QAbstractButton::clicked,
             this, &ServerListDlg::saveTTFile);
@@ -306,8 +309,9 @@ ServerListDlg::ServerListDlg(QWidget * parent/* = 0*/)
 
     showLatestHosts();
 
+    ui.officialserverChkBox->setChecked(ttSettings->value(SETTINGS_DISPLAY_OFFICIALSERVERS, SETTINGS_DISPLAY_OFFICIALSERVERS_DEFAULT).toBool());
     ui.publicserverChkBox->setChecked(ttSettings->value(SETTINGS_DISPLAY_PUBLICSERVERS, SETTINGS_DISPLAY_PUBLICSERVERS_DEFAULT).toBool());
-    ui.privateserverChkBox->setChecked(ttSettings->value(SETTINGS_DISPLAY_PRIVATESERVERS, SETTINGS_DISPLAY_PRIVATESERVERS_DEFAULT).toBool());
+    ui.unofficialserverChkBox->setChecked(ttSettings->value(SETTINGS_DISPLAY_UNOFFICIALSERVERS, SETTINGS_DISPLAY_UNOFFICIALSERVERS_DEFAULT).toBool());
 
     refreshServerList();
     HostEntry lasthost;
@@ -552,18 +556,20 @@ void ServerListDlg::slotDoubleClicked(const QModelIndex& /*index*/)
 
 void ServerListDlg::requestServerList()
 {
+    bool officialservers = ui.officialserverChkBox->isChecked();
     bool publicservers = ui.publicserverChkBox->isChecked();
-    bool privateservers = ui.privateserverChkBox->isChecked();
+    bool unofficialservers = ui.unofficialserverChkBox->isChecked();
+    ttSettings->setValue(SETTINGS_DISPLAY_OFFICIALSERVERS, officialservers);
     ttSettings->setValue(SETTINGS_DISPLAY_PUBLICSERVERS, publicservers);
-    ttSettings->setValue(SETTINGS_DISPLAY_PRIVATESERVERS, privateservers);
+    ttSettings->setValue(SETTINGS_DISPLAY_UNOFFICIALSERVERS, unofficialservers);
 
-    if (!privateservers && !publicservers)
+    if (!officialservers && !unofficialservers && !publicservers)
         return;
 
     if (!m_httpsrvlist_manager)
         m_httpsrvlist_manager = new QNetworkAccessManager(this);
 
-    QUrl url(URL_FREESERVER(privateservers, publicservers));
+    QUrl url(URL_FREESERVER(officialservers, publicservers, unofficialservers));
     connect(m_httpsrvlist_manager, &QNetworkAccessManager::finished,
             this, &ServerListDlg::serverlistReply);
 
@@ -614,6 +620,10 @@ void ServerListDlg::publishServer()
     if (!getHostEntry(entry) || entry.name.isEmpty())
         return;
 
+    if (QMessageBox::question(this, tr("Publish Server"),
+                             tr("Are you sure you want to publish the server named \"%1\"").arg(entry.name)) != QMessageBox::Yes)
+        return;
+
     if (!m_http_srvpublish_manager)
         m_http_srvpublish_manager = new QNetworkAccessManager(this);
 
@@ -641,14 +651,14 @@ void ServerListDlg::publishServerRequest(QNetworkReply* reply)
     }
     else
     {
-        QMessageBox::information(this, tr("Publish Server"),
-            tr("Change your server's name to include the text #teamtalkpublish#.\n"
-                "This will verify that you're the owner of the server.\n"
-                "Once this is done your private server will appear in a couple of minutes.\n\n"
-                "Delete the published user account to unregister your server.\n\n"
-                "The #teamtalkpublish# notification can be removed once\n"
-                "the server has been verified."
-            ));
+        QInputDialog::getText(this, tr("Publish Server Completed"),
+                              tr("Update your server's properties so its server name includes the text #teamtalkpublish#.\n"
+                              "This will verify that you're the owner of the server.\n"
+                              "Once the server is verified your server will appear in a couple of minutes.\n\n"
+                              "The #teamtalkpublish# notification can be removed once\n"
+                              "the server has been verified.\n\n"
+                              "Delete the published user account to unregister your server."),
+                              QLineEdit::Normal, "#teamtalkpublish#");
     }
 }
 
@@ -692,28 +702,28 @@ void ServerListDlg::slotTreeContextMenu(const QPoint& /*point*/)
         delServ->setEnabled(m_model->getServers()[srcIndex.row()].srvtype == SERVERTYPE_LOCAL);
     if (QAction* action = menu.exec(QCursor::pos()))
     {
-
         auto sortToggle = m_proxyModel->sortOrder() == Qt::AscendingOrder ? Qt::DescendingOrder : Qt::AscendingOrder;
         if (action == sortDefault)
         {
             m_proxyModel->setSortRole(Qt::UserRole);
-            m_proxyModel->sort(COLUMN_INDEX_SERVERNAME, m_proxyModel->sortColumn() == COLUMN_INDEX_SERVERNAME ? sortToggle : Qt::AscendingOrder);
+            ui.serverTreeView->header()->setSortIndicator(COLUMN_INDEX_SERVERNAME, m_proxyModel->sortColumn() == COLUMN_INDEX_SERVERNAME ? sortToggle : Qt::AscendingOrder);
         }
         else if (action == sortName)
         {
             m_proxyModel->setSortRole(Qt::DisplayRole);
-            m_proxyModel->sort(COLUMN_INDEX_SERVERNAME, m_proxyModel->sortColumn() == COLUMN_INDEX_SERVERNAME ? sortToggle : Qt::AscendingOrder);
+            ui.serverTreeView->header()->setSortIndicator(COLUMN_INDEX_SERVERNAME, m_proxyModel->sortColumn() == COLUMN_INDEX_SERVERNAME ? sortToggle : Qt::AscendingOrder);
         }
         else if (action == sortUserCount)
         {
-            m_proxyModel->sort(COLUMN_INDEX_USERCOUNT, m_proxyModel->sortColumn() == COLUMN_INDEX_USERCOUNT ? sortToggle : Qt::AscendingOrder);
+            m_proxyModel->setSortRole(Qt::DisplayRole);
+            ui.serverTreeView->header()->setSortIndicator(COLUMN_INDEX_USERCOUNT, m_proxyModel->sortColumn() == COLUMN_INDEX_USERCOUNT ? sortToggle : Qt::AscendingOrder);
         }
         else if (action == sortCountry)
         {
-            m_proxyModel->sort(COLUMN_INDEX_COUNTRY, m_proxyModel->sortColumn() == COLUMN_INDEX_COUNTRY ? sortToggle : Qt::AscendingOrder);
+            m_proxyModel->setSortRole(Qt::DisplayRole);
+            ui.serverTreeView->header()->setSortIndicator(COLUMN_INDEX_COUNTRY, m_proxyModel->sortColumn() == COLUMN_INDEX_COUNTRY ? sortToggle : Qt::AscendingOrder);
         }
         else if (action == delServ)
             emit(deleteSelectedServer());
-        ttSettings->setValue(SETTINGS_DISPLAY_SERVERLIST_HEADERSIZES, ui.serverTreeView->header()->saveState());
     }
 }

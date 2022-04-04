@@ -31,8 +31,8 @@
 
 #define COMPANYNAME         "BearWare.dk"
 #define APPVERSION_SHORT    "5.9.0"
-#define APPVERSION_POSTFIX  " - Unreleased"
-#define APPVERSION          TEAMTALK_VERSION APPVERSION_POSTFIX
+#define APPVERSION_POSTFIX  ""
+#define APPVERSION          "5.9" APPVERSION_POSTFIX
 
 #define APPICON             QString::fromUtf8(":/images/images/teamtalk.png")
 #define APPTRAYICON         QString::fromUtf8(":/images/images/teamtalky.png")
@@ -75,7 +75,7 @@
 #define OSTYPE "Linux"
 #endif
 
-#define URL_FREESERVER(priv, pub) QString("http://www.bearware.dk/teamtalk/tt5servers.php?client=" APPNAME_SHORT "&version=" APPVERSION_SHORT "&dllversion=" TEAMTALK_VERSION "&os=" OSTYPE "&private=%1&public=%2").arg(priv ? "1" : "0").arg(pub ? "1" : "0")
+#define URL_FREESERVER(official, pub, unofficial) QString("http://www.bearware.dk/teamtalk/tt5servers.php?client=" APPNAME_SHORT "&version=" APPVERSION_SHORT "&dllversion=" TEAMTALK_VERSION "&os=" OSTYPE "&official=%1&unofficial=%2&public=%3").arg(official ? "1" : "0").arg(unofficial ? "1" : "0").arg(pub ? "1" : "0")
 #define URL_PUBLISHSERVER(uid, token) QString("https://www.bearware.dk/teamtalk/tt5servers.php?client=" APPNAME_SHORT "&version=" APPVERSION_SHORT "&dllversion=" TEAMTALK_VERSION "&os=" OSTYPE "&action=publish&username=%1&token=%2").arg(uid).arg(token)
 #define URL_APPUPDATE(beta)       QString("http://www.bearware.dk/teamtalk/tt5update.php?client=" APPNAME_SHORT "&version=" APPVERSION_SHORT "&dllversion=" TEAMTALK_VERSION "&os=" OSTYPE "&beta=%1").arg(beta ? "1" : "0")
 

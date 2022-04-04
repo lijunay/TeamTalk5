@@ -511,8 +511,8 @@ MainWindow::MainWindow(const QString& cfgfile)
     /* End - Help menu */
 
     /* Begin - Extra toolbar buttons */
-    connect(ui.actionEnableQuestionMode, &QAction::triggered,
-            this, &MainWindow::slotEnableQuestionMode);
+    connect(ui.actionToggleQuestionMode, &QAction::triggered,
+            this, &MainWindow::slotToggleQuestionMode);
     /* End - Extra toolbar buttons */
 
     /* Begin - CLIENTEVENT_* messages */
@@ -1180,7 +1180,10 @@ void MainWindow::clienteventCmdUserUpdate(const User& user)
     if (user.nUserID != TT_GetMyUserID(ttInst) && user.nChannelID == m_mychannel.nChannelID)
     {
         if ((prev_user.nStatusMode & STATUSMODE_QUESTION) == 0 && (user.nStatusMode & STATUSMODE_QUESTION))
+        {
            playSoundEvent(SOUNDEVENT_QUESTIONMODE);
+           addTextToSpeechMessage(TTS_USER_QUESTIONMODE, tr("%1 set question mode").arg(getDisplayName(user)));
+        }
     }
 
     //update desktop access button
@@ -5092,20 +5095,19 @@ void MainWindow::slotFilesContextMenu(const QPoint &/* pos*/)
     {
         auto sortToggle = m_proxyFilesModel->sortOrder() == Qt::AscendingOrder ? Qt::DescendingOrder : Qt::AscendingOrder;
         if (action == sortName)
-            m_proxyFilesModel->sort(COLUMN_INDEX_NAME, m_proxyFilesModel->sortColumn() == COLUMN_INDEX_NAME ? sortToggle : Qt::AscendingOrder);
+            ui.filesView->header()->setSortIndicator(COLUMN_INDEX_NAME, m_proxyFilesModel->sortColumn() == COLUMN_INDEX_NAME ? sortToggle : Qt::AscendingOrder);
         else if (action == sortSize)
-            m_proxyFilesModel->sort(COLUMN_INDEX_SIZE, m_proxyFilesModel->sortColumn() == COLUMN_INDEX_SIZE ? sortToggle : Qt::AscendingOrder);
+            ui.filesView->header()->setSortIndicator(COLUMN_INDEX_SIZE, m_proxyFilesModel->sortColumn() == COLUMN_INDEX_SIZE ? sortToggle : Qt::AscendingOrder);
         else if (action == sortOwner)
-            m_proxyFilesModel->sort(COLUMN_INDEX_OWNER, m_proxyFilesModel->sortColumn() == COLUMN_INDEX_OWNER? sortToggle : Qt::AscendingOrder);
+            ui.filesView->header()->setSortIndicator(COLUMN_INDEX_OWNER, m_proxyFilesModel->sortColumn() == COLUMN_INDEX_OWNER? sortToggle : Qt::AscendingOrder);
         else if (action == sortUpload)
-            m_proxyFilesModel->sort(COLUMN_INDEX_UPLOADED, m_proxyFilesModel->sortColumn() == COLUMN_INDEX_UPLOADED? sortToggle : Qt::AscendingOrder);
+            ui.filesView->header()->setSortIndicator(COLUMN_INDEX_UPLOADED, m_proxyFilesModel->sortColumn() == COLUMN_INDEX_UPLOADED? sortToggle : Qt::AscendingOrder);
         else if (action == upload)
             slotChannelsUploadFile();
         else if (action == download)
             slotChannelsDownloadFile();
         else if (action == del)
             slotChannelsDeleteFile();
-        ttSettings->setValue(SETTINGS_DISPLAY_FILESHEADER, ui.filesView->header()->saveState());
     }
 }
 
@@ -6585,7 +6587,7 @@ void MainWindow::slotUserUpdate(const User& user)
     }
 }
 
-void MainWindow::slotEnableQuestionMode(bool checked)
+void MainWindow::slotToggleQuestionMode(bool checked)
 {
     if(checked)
         m_statusmode |= STATUSMODE_QUESTION;
